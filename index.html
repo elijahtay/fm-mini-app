@@ -96,22 +96,16 @@
          to prove the concept! -->
 
     <script>
-        // 3. Initialize the Telegram WebApp Object
+     // Initialize the Telegram WebApp Object
         let tg = window.Telegram.WebApp;
-        
-        // Expand the app to full screen height
         tg.expand();
-
-        // Inform Telegram we are ready
         tg.ready();
 
-        // 4. Setup the Native Main Button at the bottom
         let mainButton = tg.MainButton;
         mainButton.setText("SUBMIT FAULT");
         mainButton.show();
-        mainButton.disable(); // Disabled until they type a description
+        mainButton.disable(); 
 
-        // 5. Validation logic
         const areaSelect = document.getElementById('area');
         const descInput = document.getElementById('description');
 
@@ -126,7 +120,7 @@
         areaSelect.addEventListener('change', checkForm);
         descInput.addEventListener('input', checkForm);
 
-        // 6. When the user clicks the native "Submit" button
+        // When the user clicks the native "Submit" button
         mainButton.onClick(function() {
             const data = {
                 action: "log_fault",
@@ -135,8 +129,15 @@
                 description: descInput.value
             };
             
-            // This sends the JSON data back to your Python bot!
-            tg.sendData(JSON.stringify(data)); 
+            try {
+                // Send the data
+                tg.sendData(JSON.stringify(data)); 
+                // Force the app to close!
+                tg.close(); 
+            } catch (error) {
+                // If Telegram blocks it, show a native popup error!
+                tg.showAlert("Oops! Telegram blocked the data. Make sure you opened this app using the big Keyboard Button (type /app), NOT an inline button.");
+            }
         });
     </script>
 </body>
