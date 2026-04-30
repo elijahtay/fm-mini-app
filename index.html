@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Log a Fault</title>
+    <!-- 1. The Official Telegram WebApp Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* 2. Styling to match native Telegram look */
+        body {
+            font-family: var(--tg-theme-font-family, sans-serif);
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+            margin: 0;
+        }
+        
+        h2 {
+            margin-top: 0;
+            color: var(--tg-theme-text-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        select, textarea, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #cccccc);
+            border-radius: 8px;
+            box-sizing: border-box;
+            background-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            color: var(--tg-theme-text-color);
+            font-size: 16px;
+            /* Prevents iOS from zooming in on inputs */
+            appearance: none; 
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        /* The Main Button controlled by Telegram */
+        #submit-btn {
+            display: none; /* We will use Telegram's native bottom button instead */
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🚨 Report an Issue</h2>
+    <p>Please fill out the details below.</p>
+
+    <div class="form-group">
+        <label for="area">Select Area</label>
+        <select id="area" required>
+            <!-- In a real app, you might pass these dynamically, but static is easier for V1 -->
+            <option value="" disabled selected>Choose a location...</option>
+            <option value="Atrium">Atrium</option>
+            <option value="Lift Lobby">Lift Lobby</option>
+            <option value="Hub">Hub</option>
+            <option value="Auditorium">Auditorium</option>
+            <option value="Baby Space">Baby Space</option>
+            <option value="Level 3">Level 3</option>
+            <option value="General">General / Other</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="priority">Priority Level</label>
+        <select id="priority" required>
+            <option value="LOW">🟢 Low (Routine maintenance)</option>
+            <option value="MEDIUM">🟡 Medium (Needs attention soon)</option>
+            <option value="HIGH">🔴 High (Safety issue / Urgent fix)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description of Fault</label>
+        <textarea id="description" placeholder="e.g., The left sink pipe is leaking heavily onto the floor." required></textarea>
+    </div>
+
+    <!-- For Version 1, we will skip native photo uploading from the web view, 
+         as sending images via the WebApp API to the bot requires setting up a 
+         webhook and a multipart-form backend. We will keep it text-only for now 
+         to prove the concept! -->
+
+    <script>
+        // 3. Initialize the Telegram WebApp Object
+        let tg = window.Telegram.WebApp;
+        
+        // Expand the app to full screen height
+        tg.expand();
+
+        // Inform Telegram we are ready
+        tg.ready();
+
+        // 4. Setup the Native Main Button at the bottom
+        let mainButton = tg.MainButton;
+        mainButton.setText("SUBMIT FAULT");
+        mainButton.show();
+        mainButton.disable(); // Disabled until they type a description
+
+        // 5. Validation logic
+        const areaSelect = document.getElementById('area');
+        const descInput = document.getElementById('description');
+
+        function checkForm() {
+            if (areaSelect.value !== "" && descInput.value.trim() !== "") {
+                mainButton.enable();
+            } else {
+                mainButton.disable();
+            }
+        }
+
+        areaSelect.addEventListener('change', checkForm);
+        descInput.addEventListener('input', checkForm);
+
+        // 6. When the user clicks the native "Submit" button
+        mainButton.onClick(function() {
+            const data = {
+                action: "log_fault",
+                area: areaSelect.value,
+                priority: document.getElementById('priority').value,
+                description: descInput.value
+            };
+            
+            // This sends the JSON data back to your Python bot!
+            tg.sendData(JSON.stringify(data)); 
+        });
+    </script>
+</body>
+</html>
